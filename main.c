@@ -79,18 +79,6 @@ metadata getMetadata(__uint8_t * img)
     return data;
 }
 
-int getHeight(__uint8_t * img)
-{
-    // From https://en.wikipedia.org/wiki/BMP_file_format
-    // In DIB header, height is at offset 20 and is 2 bytes long
-    // I noticed this doesn't actually seem to line up, and the actual offset is 22.
-    __uint8_t left = img[22];
-    __uint8_t right = img[23];
-    __uint16_t height_16 = (0 ^ right << 8) ^ left;
-    int height = 0 ^ height_16;
-
-    return height;
-}
 
 int main(int argc, char**argv)
 {
