@@ -1,74 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "file_handling.c"
 
-typedef struct image
+int setPix(image img, int x, int y, int R, int G, int B)
 {
-    __uint8_t* image;
-    int width;
-    int height;
-    int bpp; // bits per pixel
-    int offset; // The offset at which the actual pixel data starts
-} image;
+    // Range check
+    if (x >= img.width || y >= img.height || x < 0 || y < 0) return 1;
 
-int bytesToInt(__uint8_t* img, int offset, int size)
-{
-    int value = 0;
+    // https://en.wikipedia.org/wiki/BMP_file_format
+    // One row contains 3 bytes for each pixel, but each row must be a multiple of 4 so there is some padding.
+    // Heading: "Pixel storage"
 
-    for (int i = offset; i < offset+size; i++)
-    {
-        int shAmt = (i - offset) * 8;
-        value = value ^ (img[i] << shAmt);
-    }
+    // Subtract 1 because (1,1) for a non-programmer means (0,0).
 
-    return value;
+    int rowSize = (img.bpp * img.width + 31) / 32 * 4;
+    int addr = img.offset + (y*rowSize) + x*3;
+
+    img.image[addr] = B;
+    img.image[addr+1] = G;
+    img.image[addr+2] = R;
+
+    return 0;
 }
-
-// Assumes the file is at least 6 bytes long
-// If the file is a .bmp, this function will retrieve its size by reading its file header. 
-int getFilesize(FILE* fptr)
-{
-    // From https://en.wikipedia.org/wiki/BMP_file_format
-    // Offset and length of "size" attribute
-    int offset = 2;
-    int size = 4;
-
-    // We read just enough of the file to look at this specific part of the header
-    __uint8_t contents[offset+size];
-    fread(contents,sizeof(__uint8_t),offset+size,fptr);
-    
-    // The first two bytes in a bmp file are a header field identifying the BMP
-    // The next four represent the file size
-    rewind(fptr);
-    return bytesToInt(contents,2,4);
-}
-
-// Reads the entire contents of a valid .bmp file into an array, returns array pointer
-__uint8_t * readFile(FILE *fptr)
-{   
-    int size = getFilesize(fptr);
-    __uint8_t * contents = malloc(sizeof(__uint8_t)*size);
-    fread(contents,sizeof(__uint8_t),size,fptr);
-    
-    rewind(fptr);
-    return contents;
-}
-
-image toImage(FILE* fptr)
-{
-    __uint8_t* img = readFile(fptr);
-
-    // From https://en.wikipedia.org/wiki/BMP_file_format
-    // Specifically, this is read from the DIB data of the file, according to the Windows BITMAPINFOHEADER format.
-    image data;
-    data.image = img;
-    data.width = bytesToInt(img,18,4);
-    data.height = bytesToInt(img,22,4);
-    data.bpp = bytesToInt(img,28,2);
-    data.offset = bytesToInt(img,10,4);
-
-    return data;
-}
-
 
 int main(int argc, char**argv)
 {
@@ -84,10 +37,14 @@ int main(int argc, char**argv)
     printf("%dx%d, %d bit colour.\n",data.width,data.height,data.bpp);
     printf("File size: %d\n",getFilesize(fptr));
     printf("Offset: %d\n",data.offset);
-
+    
+    setPix(data,0,0,255,0,0);
+    setPix(data,112,0,0,255,0);
+    setPix(data,112,115,0,0,255);
+    setPix(data,0,115,0,255,255);
+    
     FILE *wptr = fopen(argv[2],"wb");
 
     fwrite(data.image,sizeof(__uint8_t),getFilesize(fptr),wptr);
-
     return 0;
 }
