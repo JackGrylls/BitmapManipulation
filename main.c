@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct metadata
+typedef struct image
 {
+    __uint8_t* image;
     int width;
     int height;
     int bpp; // bits per pixel
-} metadata;
+    int offset; // The offset at which the actual pixel data starts
+} image;
 
 int bytesToInt(__uint8_t* img, int offset, int size)
 {
@@ -32,7 +34,7 @@ int getFilesize(FILE* fptr)
 
     // We read just enough of the file to look at this specific part of the header
     __uint8_t contents[offset+size];
-    fgets(contents,offset+size,fptr);
+    fread(contents,sizeof(__uint8_t),offset+size,fptr);
     
     // The first two bytes in a bmp file are a header field identifying the BMP
     // The next four represent the file size
@@ -45,19 +47,24 @@ __uint8_t * readFile(FILE *fptr)
 {   
     int size = getFilesize(fptr);
     __uint8_t * contents = malloc(sizeof(__uint8_t)*size);
-    fgets(contents,size,fptr);
+    fread(contents,sizeof(__uint8_t),size,fptr);
     
     rewind(fptr);
     return contents;
 }
 
-metadata getMetadata(__uint8_t * img)
+image toImage(FILE* fptr)
 {
+    __uint8_t* img = readFile(fptr);
+
     // From https://en.wikipedia.org/wiki/BMP_file_format
-    metadata data;
+    // Specifically, this is read from the DIB data of the file, according to the Windows BITMAPINFOHEADER format.
+    image data;
+    data.image = img;
     data.width = bytesToInt(img,18,4);
     data.height = bytesToInt(img,22,4);
     data.bpp = bytesToInt(img,28,2);
+    data.offset = bytesToInt(img,10,4);
 
     return data;
 }
@@ -65,7 +72,7 @@ metadata getMetadata(__uint8_t * img)
 
 int main(int argc, char**argv)
 {
-    if (argc != 2)
+    if (argc <= 2)
     {
         printf("Usage: ./main.h <filename>.bmp\n");
         return 0;
@@ -73,9 +80,14 @@ int main(int argc, char**argv)
     
     FILE *fptr = fopen(argv[1],"r");
 
-    __uint8_t * img = readFile(fptr);
-
-    metadata data = getMetadata(img);
+    image data = toImage(fptr);
     printf("%dx%d, %d bit colour.\n",data.width,data.height,data.bpp);
     printf("File size: %d\n",getFilesize(fptr));
+    printf("Offset: %d\n",data.offset);
+
+    FILE *wptr = fopen(argv[2],"wb");
+
+    fwrite(data.image,sizeof(__uint8_t),getFilesize(fptr),wptr);
+
+    return 0;
 }
