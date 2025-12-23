@@ -10,12 +10,12 @@ int setPix(image img, int x, int y, int R, int G, int B)
     // https://en.wikipedia.org/wiki/BMP_file_format
     // One row contains 3 bytes for each pixel, but each row must be a multiple of 4 so there is some padding.
     // Heading: "Pixel storage"
-
-    // Subtract 1 because (1,1) for a non-programmer means (0,0).
-
     int rowSize = (img.bpp * img.width + 31) / 32 * 4;
+
+    // Converting 2D coords to flat array index
     int addr = img.offset + (y*rowSize) + x*3;
 
+    // Set colours individually
     img.image[addr] = B;
     img.image[addr+1] = G;
     img.image[addr+2] = R;
@@ -38,13 +38,14 @@ int main(int argc, char**argv)
     printf("File size: %d\n",getFilesize(fptr));
     printf("Offset: %d\n",data.offset);
     
+    // Example usage of setPix, sets all four corners to different colours.
     setPix(data,0,0,255,0,0);
     setPix(data,112,0,0,255,0);
     setPix(data,112,115,0,0,255);
     setPix(data,0,115,0,255,255);
     
+    // Write to output file
     FILE *wptr = fopen(argv[2],"wb");
-
     fwrite(data.image,sizeof(__uint8_t),getFilesize(fptr),wptr);
     return 0;
 }
