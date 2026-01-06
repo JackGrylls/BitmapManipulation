@@ -2,8 +2,29 @@
 #include <stdlib.h>
 #include "file_handling.c"
 
-int setPix(image img, int x, int y, int R, int G, int B)
+typedef struct pixel
 {
+    int R;
+    int G;
+    int B;
+} pixel;
+
+void hexcode(int hex, pixel * pix)
+{
+    printf("Hex: %0x\n",hex);
+    printf("Binary: %032b\n",hex);
+    pix->R = (0xFF0000 & hex) >> 16;
+    pix->G = (0x00FF00 & hex) >> 8;
+    pix->B = 0x0000FF & hex;
+    printf("%0x\n",pix->R);
+    printf("%0x\n",pix->G);
+    printf("%0x\n",pix->B);
+}
+
+int setPix(image img, int x, int y, pixel * p)
+{
+    pixel pix = *p;
+
     // Range check
     if (x >= img.width || y >= img.height || x < 0 || y < 0) return 1;
 
@@ -16,9 +37,9 @@ int setPix(image img, int x, int y, int R, int G, int B)
     int addr = img.offset + (y*rowSize) + x*3;
 
     // Set colours individually
-    img.image[addr] = B;
-    img.image[addr+1] = G;
-    img.image[addr+2] = R;
+    img.image[addr] = pix.B;
+    img.image[addr+1] = pix.G;
+    img.image[addr+2] = pix.R;
 
     return 0;
 }
@@ -38,14 +59,21 @@ int main(int argc, char**argv)
     printf("File size: %d\n",getFilesize(fptr));
     printf("Offset: %d\n",data.offset);
     
+    
     // Example usage of setPix, sets all four corners to different colours.
-    setPix(data,0,0,255,0,0);
-    setPix(data,112,0,0,255,0);
-    setPix(data,112,115,0,0,255);
-    setPix(data,0,115,0,255,255);
+    pixel pix;
+    hexcode(0x02f0ff,&pix);
+    printf("%0x\n",pix.R);
+    printf("%0x\n",pix.G);
+    printf("%0x\n",pix.B);
+    setPix(data,0,0,&pix);
+    setPix(data,112,0,&pix);
+    setPix(data,112,115,&pix);
+    setPix(data,0,115,&pix);
     
     // Write to output file
     FILE *wptr = fopen(argv[2],"wb");
     fwrite(data.image,sizeof(__uint8_t),getFilesize(fptr),wptr);
+
     return 0;
 }
