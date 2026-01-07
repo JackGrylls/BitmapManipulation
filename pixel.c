@@ -23,6 +23,9 @@ int setPix(image img, int x, int y, pixel * p)
     // Range check
     if (x >= img.width || y >= img.height || x < 0 || y < 0) return 1;
 
+    // flip y (so that 0,0 is in the top left corner, to match image editors)
+    y = img.height - y;
+
     // https://en.wikipedia.org/wiki/BMP_file_format
     // One row contains 3 bytes for each pixel, but each row must be a multiple of 4 so there is some padding.
     // Heading: "Pixel storage"
@@ -33,8 +36,33 @@ int setPix(image img, int x, int y, pixel * p)
 
     // Set colours individually
     img.image[addr] = pix.B;
-    img.image[addr+1] = pix.G;
-    img.image[addr+2] = pix.R;
+    img.image[addr + 1] = pix.G;
+    img.image[addr + 2] = pix.R;
 
     return 0;
+}
+
+pixel * getPix(image img, int x, int y)
+{
+    pixel * pix = malloc(sizeof(pixel));
+    
+    // range check
+    if (x >= img.width || y >= img.height || x < 0 || y < 0) return NULL;
+
+    // flip y (so that 0,0 is in the top left corner, to match image editors)
+    y = img.height - y;
+
+    // https://en.wikipedia.org/wiki/BMP_file_format
+    // One row contains 3 bytes for each pixel, but each row must be a multiple of 4 so there is some padding.
+    // Heading: "Pixel storage"
+    int rowSize = (img.bpp * img.width + 31) / 32 * 4;
+
+    // Converting 2D coords to flat array index
+    int addr = img.offset + (y*rowSize) + x*3;
+
+    pix->B = img.image[addr];
+    pix->G = img.image[addr + 1];
+    pix->R = img.image[addr + 2];
+
+    return pix;
 }

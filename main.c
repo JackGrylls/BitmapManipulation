@@ -5,7 +5,23 @@
 
 void gaussian_blur(image img)
 {
-    
+    pixel * pix = getPix(img,33,81);
+
+    for (int i = 0; i < img.width; i++)
+    {
+        for (int j = 0; j < img.height; j++)
+        {   
+            int ker[3][3] = {
+                {1,2,1},
+                {2,4,2},
+                {1,2,1}
+            };
+
+            setPix(img,i,j,pix);
+        }
+    }
+
+    setPix(img,33,81,colour(0xFF0000));
 }
 
 int main(int argc, char**argv)
@@ -25,12 +41,8 @@ int main(int argc, char**argv)
     printf("Offset: %d bytes\n",data.offset);
     
     
-    // Example usage of setPix, sets all four corners to different colours.
-    pixel pix;
-    setPix(data,0,0,colour(0xff0000));
-    setPix(data,112,0,colour(0x02f0ff));
-    setPix(data,112,115,colour(0x02f0ff));
-    setPix(data,0,115,colour(0x02f0ff));
+    // Manipulate image
+    gaussian_blur(data);
     
     // Write to output file
     FILE *wptr = fopen(argv[2],"wb");
