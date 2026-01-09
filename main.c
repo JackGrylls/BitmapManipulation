@@ -5,26 +5,50 @@
 
 void gaussian_blur(image img)
 {
-    pixel * pix = getPix(img,33,81);
-
     for (int i = 0; i < img.width; i++)
     {
         for (int j = 0; j < img.height; j++)
         {   
+            pixel colour;
+
             int ker[3][3] = {
                 {1,2,1},
                 {2,4,2},
                 {1,2,1}
             };
 
-            setPix(img,i,j,pix);
+            colour.R = 0;
+            colour.G = 0;
+            colour.B = 0;
+
+            for (int row = -1; row <= 1; row++)
+            {
+                for (int col = -1; col <= 1; col++)
+                {
+                    int xPos = i + row;
+                    int yPos = j + col;
+
+                    if (xPos < 0) xPos = 0;
+                    if (yPos < 0) yPos = 0;
+                    if (xPos >= img.width) xPos = img.width - 1;
+                    if (yPos >= img.height) yPos = img.height - 1;
+
+                    colour.R += ker[row+1][col+1] * (getPix(img, xPos, yPos)->R);
+                    colour.G += ker[row+1][col+1] * (getPix(img, xPos, yPos)->G);
+                    colour.B += ker[row+1][col+1] * (getPix(img, xPos, yPos)->B);
+                }
+            }
+
+            colour.R = colour.R / 16;
+            colour.G = colour.G / 16;
+            colour.B = colour.B / 16;
+
+            setPix(img,i,j,&colour);
         }
     }
-
-    setPix(img,33,81,colour(0xFF0000));
 }
 
-int main(int argc, char**argv)
+int main(int argc, char** argv)
 {
     if (argc <= 2)
     {
