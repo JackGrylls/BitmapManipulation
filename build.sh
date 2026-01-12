@@ -1,2 +1,2 @@
 #!/bin/bash
-gcc -o main.h main.c
+gcc -o main.h main.c -lm
