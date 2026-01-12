@@ -21,7 +21,7 @@ void gaussian_blur(image img,int ker_size, double sd)
 
             float val = -((di*di + dj*dj)/(2*sd*sd));
 
-            val = (1.0) * exp(val);
+            val = exp(val);
             ker[i][j] = val / divisor; 
         
             total += val;
@@ -68,9 +68,9 @@ void gaussian_blur(image img,int ker_size, double sd)
 
 int main(int argc, char** argv)
 {
-    if (argc <= 2)
+    if (argc <= 4)
     {
-        printf("Usage: ./main.h <filename>.bmp <filename>.bmp\n");
+        printf("Usage: ./main.h <filename>.bmp <filename>.bmp <kernel size> <sigma>\n");
         printf("                ^input file    ^ output file\n");
         return 0;
     }
@@ -84,7 +84,10 @@ int main(int argc, char** argv)
     
     
     // Manipulate image
-    gaussian_blur(data,15,2);
+    int kernel_size = atoi(argv[3]);
+    int sigma = atoi(argv[4]);
+
+    gaussian_blur(data,kernel_size,sigma);
     
     // Write to output file
     FILE *wptr = fopen(argv[2],"wb");
