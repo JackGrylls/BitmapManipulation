@@ -110,6 +110,8 @@ int main(int argc, char** argv)
 
     
     // Write to output file
+    // We assume the output file will have the same size as the input file
+    // so we can use data.filesize as a parameter for fwrite()
     FILE *wptr = fopen(argv[2],"wb");
     fwrite(data.image,sizeof(__uint8_t),data.filesize,wptr);
     fclose(wptr);
