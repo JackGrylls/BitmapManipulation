@@ -7,6 +7,7 @@ typedef struct image
     int height;
     int bpp; // bits per pixel
     int offset; // The offset at which the actual pixel data starts
+    int filesize;
 } image;
 
 // Takes bytes from an array and combines at most four of them to produce an int.
@@ -72,6 +73,7 @@ image toImage(FILE* fptr)
     data.height = bytesToInt(img,22,4);
     data.bpp = bytesToInt(img,28,2);
     data.offset = bytesToInt(img,10,4);
+    data.filesize = getFilesize(fptr);
 
     return data;
 }
